@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css?family=Geist+Pixel&display=swap" rel="stylesheet">
+<title>Geometry Graphic Tool — Boolean v24</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+<header><span class="site-title">Geometry Graphic Tool</span><button id="coffeeBtn" class="coffee-btn" type="button">Buy Me a Coffee</button></header>
+<div class="body">
+  <nav>
+    <button class="navbtn" data-mode="boolean">Boolean</button>
+    <button class="navbtn active" data-mode="grid">Grid</button>
+  </nav>
+
+  <section class="controls">
+    <div id="gridPanel" class="panel active">
+      <div class="ctrl">
+        <div class="group-title">그리드 모양</div>
+        <div class="grid-types">
+          <button class="gridtype check-option" data-type="square"><span class="box"></span><span>사각</span></button>
+          <button class="gridtype check-option" data-type="circle"><span class="box"></span><span>원</span></button>
+          <button class="gridtype check-option checked" data-type="hybrid"><span class="box"></span><span>사각+원</span></button>
+          <button class="gridtype check-option" data-type="hex"><span class="box"></span><span>벌집</span></button>
+        </div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-head"><span class="ctrl-title">그리드 크기</span><span id="sizeVal" class="ctrl-value">12×12</span></div>
+        <input id="size" type="range" min="3" max="18" value="12">
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-head"><span class="ctrl-title">그리드 비율</span><span id="ratioVal" class="ctrl-value">1:1</span></div>
+        <input id="ratio" type="range" min="-50" max="50" value="0">
+        <div class="ends"><span>가로</span><span>세로</span></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-head"><span class="ctrl-title">그리드 간격</span><span id="gapVal" class="ctrl-value">0</span></div>
+        <input id="gap" type="range" min="0" max="44" value="0">
+      </div>
+
+      <div id="metaballWrap" class="ctrl disabled">
+        <div class="ctrl-head">
+          <div class="meta-title-wrap">
+            <span class="ctrl-title">메타볼</span>
+            <span id="metaDisabledHelp" class="meta-help">간격 1 이상일 때 활성화</span>
+          </div>
+          <span id="metaVal" class="ctrl-value">45</span>
+        </div>
+        <input id="meta" type="range" min="0" max="100" value="45" disabled>
+        <div class="bridge-edit-row">
+          <button id="bridgeEditBtn" class="square-toggle" disabled>OFF</button>
+          <span class="bridge-edit-label">연결선 수정모드</span>
+        </div>
+        <div class="meta-edit-help">연결선을 클릭하여 잇거나 끊을 수 있습니다.</div>
+      </div>
+
+      <div id="roundWrap" class="ctrl">
+        <div class="ctrl-head"><span class="ctrl-title">라운드</span><span id="roundVal" class="ctrl-value">0</span></div>
+        <input id="round" type="range" min="0" max="100" value="0">
+      </div>
+
+      <div class="action-row">
+        <button id="outlineBtn" class="check-option"><span class="box"></span><span>아웃라인</span></button>
+        <button id="gridToggle" class="check-option"><span class="box"></span><span>그리드 끄기</span></button>
+        <button id="clearBtn" class="check-option danger"><span class="box"></span><span>전체삭제</span></button>
+      </div>
+
+      <button id="exportBtn" class="export">SVG download</button>
+    </div>
+
+    <div id="booleanPanel" class="panel">
+      <div class="ctrl">
+        <div class="group-title">원 컨트롤러</div>
+        <button id="boolEditModeBtn" class="check-option">
+          <span class="box"></span><span>원 추가/삭제</span>
+        </button>
+        <div class="boolean-help">모드를 켜면 빈 곳에서는 원을 추가하고, 기존 원 위에서는 원을 삭제할 수 있습니다.</div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-head"><span class="ctrl-title">원 크기</span><span id="boolRadiusVal" class="ctrl-value">80</span></div>
+        <input id="boolRadius" type="range" min="30" max="180" value="80">
+        <div class="bool-guide-note">원 테두리를 직접 드래그하거나, 슬라이더·숫자로 정밀하게 조절할 수 있습니다.</div>
+      </div>
+
+      <div id="boolStatus" class="boolean-status"></div>
+
+      <div class="action-row">
+        <button id="boolOutlineBtn" class="check-option"><span class="box"></span><span>아웃라인</span></button>
+        <button id="boolGuideBtn" class="check-option"><span class="box"></span><span>가이드 끄기</span></button>
+        <button id="boolResetBtn" class="check-option danger"><span class="box"></span><span>초기화</span></button>
+      </div>
+
+      <button id="boolExportBtn" class="export">SVG download</button>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <div class="canvasWrap">
+      <svg id="stage" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+        <defs id="defs"></defs>
+        <rect width="1000" height="1000" fill="#fff"/>
+        <g id="artLayer"></g>
+        <g id="bridgePreviewLayer"></g>
+        <g id="bridgeHitLayer" opacity="0"></g>
+        <g id="guideLayer"></g>
+
+        <g id="booleanArtLayer" style="display:none"></g>
+        <g id="booleanGuideLayer" style="display:none"></g>
+        <g id="booleanPreviewLayer" style="display:none"></g>
+      </svg>
+      <div id="tip" class="tip">빈 면 → 채우기 / 검은 면 → 지우기</div>
+      <div id="caption" class="caption">12×12</div>
+    </div>
+  </main>
+</div>
+</div>
+
+<script src="js/part1.js"></script>
+<script src="js/part2.js"></script>
+<script src="js/part3.js"></script>
+</body>
+</html>
